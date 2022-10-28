@@ -39,6 +39,14 @@
           gap: 30px;
           justify-content: space-around;
 
+          .selectRoom {
+            width: 100%;
+            select {
+              width: 100%;
+              padding: 0.5rem;
+            }
+          }
+
           .formInput {
             width: 40%;
 

@@ -3,16 +3,53 @@ import Sidebar from "../../components/sidebar/Sidebar";
 import Navbar from "../../components/navbar/Navbar";
 import DriveFolderUploadOutlinedIcon from "@mui/icons-material/DriveFolderUploadOutlined";
 import { useState } from "react";
+import axios from "axios";
+import { useEffect } from "react";
+const cloudname = process.env.REACT_APP_CLOUDNAME;
 
 const NewUser = ({ inputs, title }) => {
   const [file, setFile] = useState("");
   const [info, setInfo] = useState({});
 
+  //Handler methods
   const handleInputChange = (e) => {
     setInfo({ ...info, [e.target.id]: e.target.value });
   };
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    let newUser = {};
+    //upload img to cloudinary
+    if (file) {
+      const data = new FormData();
+      data.append("file", file);
+      data.append("upload_preset", "booking_users");
+      try {
+        const uploadResponse = await axios.post(
+          `https://api.cloudinary.com/v1_1/${cloudname}/image/upload`,
+          data
+        );
+        const { url } = uploadResponse.data;
+        newUser = {
+          ...info,
+          img: url,
+        };
+        console.log("hay file", newUser);
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      newUser = info;
+      console.log("no hay file", newUser);
+    }
+    try {
+      //save to DB
+      const res = await axios.post(`/auth/register`, newUser);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleLoadPhoto = (e) => {
+    setFile(e.target.files[0]);
   };
   return (
     <div className="new">
@@ -42,7 +79,7 @@ const NewUser = ({ inputs, title }) => {
                 <input
                   type="file"
                   id="file"
-                  onChange={(e) => setFile(e.target.files[0])}
+                  onChange={handleLoadPhoto}
                   style={{ display: "none" }}
                 />
               </div>
@@ -51,6 +88,7 @@ const NewUser = ({ inputs, title }) => {
                 <div className="formInput" key={input.id}>
                   <label>{input.label}</label>
                   <input
+                    id={input.id}
                     type={input.type}
                     placeholder={input.placeholder}
                     onChange={handleInputChange}
